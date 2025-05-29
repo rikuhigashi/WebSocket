@@ -1,5 +1,5 @@
 const WebSocket = require('ws');
-const { setupWSConnection } = require('y-websocket/bin/utils');
+const { setupWSConnection } = require('y-websocket');
 
 const wss = new WebSocket.Server({ port: 1234 });
 
