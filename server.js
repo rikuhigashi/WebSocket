@@ -36,6 +36,7 @@ let connectionCount = 0;
 // 心跳检测机制
 const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((client) => {
+        // 只处理 OPEN 状态的连接
         if (client.readyState !== WebSocket.OPEN) return;
 
         if (client.isAlive === false) {
@@ -67,18 +68,45 @@ wss.on('connection', (ws, req) => {
             console.log(`心跳响应: ${ws.id}`);
         });
 
+        ws.on('error', (error) => {
+            console.error(`连接错误 [${ws.id}]: ${error.message}`);
+        });
+
         // 解析 URL 和查询参数
         const parsedUrl = url.parse(req.url, true);
         const token = parsedUrl.query.token;
-        const room = parsedUrl.query.room; //
+        const room = parsedUrl.query.room;
+
+        // 清理token中的额外路径
+        const cleanToken = token.split('/')[0];
 
         if (!token) {
             throw new Error('未提供认证令牌');
         }
+        console.log(`新连接 [${ws.id}]: 房间 ${room} | Token: ${cleanToken.substring(0, 20)}...`);
+
+
+        const verifyToken = (token) => {
+            try {
+                return jwt.verify(token, process.env.JWT_SECRET);
+            } catch (error) {
+                // 特殊处理过期token
+                if (error.name === 'TokenExpiredError') {
+                    console.warn('Token已过期:', token);
+                    return null;
+                }
+
+                // 处理无效token
+                console.error('无效Token:', error.message);
+                return null;
+            }
+        };
 
         // 验证 JWT
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(`新连接 [${ws.id}]: 用户 ${decoded.email} 房间 ${room}`);
+        const decoded = verifyToken(cleanToken);
+        if (!decoded) {
+            throw new Error('无效或过期的Token');
+        }
 
         // 设置 Yjs WebSocket 连接
         setupWSConnection(ws, req, {
