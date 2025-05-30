@@ -74,6 +74,7 @@ const verifyToken = (token) => {
 
         const parsedUrl = url.parse(req.url, true);
 
+        console.log("原始Token:",parsedUrl)
         // 清理 token（移除斜杠）
         let token = parsedUrl.query.token;
         if (typeof token === 'string') {
