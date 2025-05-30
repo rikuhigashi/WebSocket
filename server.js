@@ -67,6 +67,9 @@ wss.on('close', () => {
 
 // 增强的JWT验证函数
 const verifyToken = (token) => {
+
+
+
     try {
         console.log('原始Token:', token);
         console.log('Token长度:', token.length);
@@ -183,6 +186,13 @@ const handleConnection = (ws, req) => {
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
     try {
+
+        let token = parsedUrl.query.token;
+        if (typeof token === 'string') {
+             token.replace(/\//g, '');
+        }
+        console.log('清理后Token:', token);
+        console.log('Token长度:', token.length);
         handleConnection(ws, req);
     } catch (error) {
         console.error(`未处理的连接错误: ${error.message}`);
