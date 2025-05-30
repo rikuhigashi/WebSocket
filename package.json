@@ -14,7 +14,9 @@
     "dotenv": "^16.5.0",
     "jsonwebtoken": "^9.0.2",
     "ws": "^8.18.2",
-    "y-websocket": "^3.0.0"
+    "y-protocols": "^1.0.6",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.27"
   },
   "repository": {
     "type": "git",
