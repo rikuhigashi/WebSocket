@@ -68,7 +68,7 @@ wss.on('connection', (ws, req) => {
 
         // 解析 URL 和查询参数
         const parsedUrl = url.parse(req.url, true);
-        const token = parsedUrl.query.token;
+        const token = parsedUrl.query.token|| (req.url.match(/room-(\d+)\?token=([^&]+)/)?.[2]);
 
         if (!token) {
             throw new Error('未提供认证令牌');
