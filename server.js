@@ -1,17 +1,11 @@
-// server.js
 const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
 const url = require('url');
 const http = require('http');
 require('dotenv').config();
 
-const setupWSConnection = require('y-websocket/bin/utils').setupWSConnection;
-
-console.log('setupWSConnection 类型:', typeof setupWSConnection);
-if (typeof setupWSConnection !== 'function') {
-    console.error('错误: setupWSConnection 不是一个函数');
-    process.exit(1);
-}
+const { WebsocketProvider } = require('y-websocket');  // 从 y-websocket 导入 WebsocketProvider
+const Y = require('yjs');  // 导入 Yjs
 
 // 从环境变量获取端口，默认为 1234
 const PORT = process.env.PORT || 1234;
@@ -162,12 +156,18 @@ const handleConnection = (ws, req, parsedUrl) => {
 
     // 设置 Yjs WebSocket 连接
     try {
-        setupWSConnection(ws, req, {
-            room: room,
-            gc: true,
-            awareness: new (require('y-protocols/awareness').Awareness)(new (require('yjs').Doc)())
-        });
-
+        // 使用 WebsocketProvider 替代 setupWSConnection
+        const ydoc = new Y.Doc();
+        const websocketProvider = new WebsocketProvider(
+            'wss://websocket-5ngf.onrender.com/collaboration',  // WebSocket URL
+            room,  // 房间ID
+            ydoc,  // Yjs文档实例
+            {
+                connect: true,
+                disableBc: true,
+                maxBackoffTime: 10000,  // 最大重连间隔
+            }
+        );
         console.log(`[${connectionId}] Yjs连接已建立`);
     } catch (error) {
         console.error(`[${connectionId}] Yjs设置失败: ${error.message}`);
