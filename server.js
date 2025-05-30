@@ -1,6 +1,6 @@
 // server.js
 const WebSocket = require('ws');
-const {setupWSConnection} = require('y-websocket');
+const { setupWSConnection } = require('y-websocket');
 const jwt = require('jsonwebtoken');
 const url = require('url');
 const http = require('http');
@@ -41,7 +41,6 @@ wss.on('headers', (headers, req) => {
 // 连接统计
 let connectionCount = 0;
 
-
 // 增强的心跳检测机制
 const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((client) => {
@@ -65,24 +64,23 @@ wss.on('close', () => {
     console.log('WebSocket服务器已关闭');
 });
 
-// 增强的JWT验证函数
+// 修复后的JWT验证函数
 const verifyToken = (token) => {
+    // 先检查 token 是否存在且为字符串
+    if (!token || typeof token !== 'string') {
+        console.error('无效的Token:', token);
+        return null;
+    }
 
     try {
         console.log('原始Token:', token);
         console.log('Token长度:', token.length);
 
-        const parsedUrl = url.parse(req.url, true);
-
-        console.log("原始Token:",parsedUrl)
-        // 清理 token（移除斜杠）
-        let token = parsedUrl.query.token;
-        if (typeof token === 'string') {
-            token.replace(/\//g, '');
+        // 检查 JWT_SECRET 是否存在
+        if (!process.env.JWT_SECRET) {
+            console.error('JWT_SECRET 未设置!');
+            return null;
         }
-
-        console.log('清理后Token:', token);
-        console.log('Token长度:', token.length);
 
         // 打印密钥前10个字符用于验证
         console.log('JWT_SECRET:', process.env.JWT_SECRET.substring(0, 10) + '...');
@@ -100,10 +98,6 @@ const verifyToken = (token) => {
         console.error('验证错误详情:');
         console.error('错误名称:', error.name);
         console.error('错误消息:', error.message);
-
-        if (error.name === 'TokenExpiredError') {
-            console.error('过期时间:', error.expiredAt);
-        }
 
         if (error.name === 'JsonWebTokenError') {
             console.error('具体原因:', error.message);
@@ -203,7 +197,7 @@ wss.on('connection', (ws, req) => {
         }
 
         console.log('清理后Token:', parsedUrl.query.token);
-        console.log('Token长度:', parsedUrl.query.token?.length || 0); // 安全处理可能的 undefined
+        console.log('Token长度:', parsedUrl.query.token?.length || 0);
 
         handleConnection(ws, req, parsedUrl);
     } catch (error) {
@@ -218,7 +212,13 @@ wss.on('connection', (ws, req) => {
 server.listen(PORT, () => {
     console.log(`[${new Date().toISOString()}] HTTP服务器运行中: http://localhost:${PORT}`);
     console.log(`[${new Date().toISOString()}] WebSocket服务器运行中: ws://localhost:${PORT}/collaboration`);
-    console.log(`[${new Date().toISOString()}] JWT密钥: ${process.env.JWT_SECRET.substring(0, 10)}...`);
+
+    // 安全地打印 JWT 密钥
+    if (process.env.JWT_SECRET) {
+        console.log(`[${new Date().toISOString()}] JWT密钥: ${process.env.JWT_SECRET.substring(0, 10)}...`);
+    } else {
+        console.error('[警告] JWT_SECRET 未设置!');
+    }
 });
 
 // 优雅关闭 - 支持多种信号
