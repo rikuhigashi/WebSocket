@@ -1,6 +1,7 @@
 // server.js
 const WebSocket = require('ws');
-const { setupWSConnection } = require('y-websocket');
+const yWebsocket = require('y-websocket');
+const setupWSConnection = yWebsocket.setupWSConnection;
 const jwt = require('jsonwebtoken');
 const url = require('url');
 const http = require('http');
