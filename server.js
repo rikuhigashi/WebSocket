@@ -36,14 +36,15 @@ let connectionCount = 0;
 // 心跳检测机制
 const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((client) => {
+        if (client.readyState !== WebSocket.OPEN) return;
+
         if (client.isAlive === false) {
             console.log(`终止无响应的连接: ${client.id}`);
             return client.terminate();
         }
 
         client.isAlive = false;
-        client.ping(() => {
-        });
+        client.ping();
     });
 }, 30000); // 每30秒检测一次
 
@@ -54,12 +55,13 @@ wss.on('close', () => {
 
 // 处理新连接
 wss.on('connection', (ws, req) => {
+    console.log(`收到新连接: ${req.url}`);
     try {
         // 为连接生成唯一ID
         ws.id = `conn-${++connectionCount}`;
         ws.isAlive = true;
 
-        // 监听 pong 响应
+        // 添加连接保持活动
         ws.on('pong', () => {
             ws.isAlive = true;
             console.log(`心跳响应: ${ws.id}`);
@@ -78,10 +80,13 @@ wss.on('connection', (ws, req) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log(`新连接 [${ws.id}]: 用户 ${decoded.email} 房间 ${room}`);
 
-        // 设置 Yjs WebSocket 连接，传递房间名
-        setupWSConnection(ws, req, { room });
+        // 设置 Yjs WebSocket 连接
+        setupWSConnection(ws, req, {
+            room: room,
+            gc: false // 禁用垃圾回收
+        });
 
-        // 错误处理
+        // 添加错误处理
         ws.on('error', (error) => {
             console.error(`连接错误 [${ws.id}]: ${error.message}`);
         });
