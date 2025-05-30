@@ -27,10 +27,9 @@ const server = http.createServer((req, res) => {
 
 // 创建 WebSocket 服务器
 const wss = new WebSocket.Server({
-    server, // 挂载到同一个服务器
-    path: '/collaboration' // 指定 WebSocket 路径
-});
-
+    server,
+    path: '/collaboration'
+})
 // 连接统计
 let connectionCount = 0;
 
@@ -69,6 +68,7 @@ wss.on('connection', (ws, req) => {
         // 解析 URL 和查询参数
         const parsedUrl = url.parse(req.url, true);
         const token = parsedUrl.query.token;
+        const room = parsedUrl.query.room; //
 
         if (!token) {
             throw new Error('未提供认证令牌');
@@ -76,10 +76,10 @@ wss.on('connection', (ws, req) => {
 
         // 验证 JWT
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log(`新连接 [${ws.id}]: 用户 ${decoded.email}`);
+        console.log(`新连接 [${ws.id}]: 用户 ${decoded.email} 房间 ${room}`);
 
-        // 设置 Yjs WebSocket 连接
-        setupWSConnection(ws, req);
+        // 设置 Yjs WebSocket 连接，传递房间名
+        setupWSConnection(ws, req, { room });
 
         // 错误处理
         ws.on('error', (error) => {
