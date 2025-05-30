@@ -195,6 +195,16 @@ const handleConnection = (ws, req, parsedUrl) => {
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
     try {
+        const parsedUrl = url.parse(req.url, true);
+
+        // 清理 token（移除斜杠）并更新回 parsedUrl
+        if (typeof parsedUrl.query.token === 'string') {
+            parsedUrl.query.token = parsedUrl.query.token.replace(/\//g, '');
+        }
+
+        console.log('清理后Token:', parsedUrl.query.token);
+        console.log('Token长度:', parsedUrl.query.token?.length || 0); // 安全处理可能的 undefined
+
         handleConnection(ws, req, parsedUrl);
     } catch (error) {
         console.error(`未处理的连接错误: ${error.message}`);
