@@ -68,7 +68,15 @@ wss.on('close', () => {
 // 增强的JWT验证函数
 const verifyToken = (token) => {
     try {
-        return jwt.verify(token, process.env.JWT_SECRET);
+        console.log('原始Token:', token);
+        console.log('Token长度:', token.length);
+
+        // 打印密钥前10个字符用于验证
+        console.log('JWT_SECRET:', process.env.JWT_SECRET.substring(0, 10) + '...');
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log('解码后内容:', decoded);
+        return decoded;
     } catch (error) {
         // 特殊处理过期token
         if (error.name === 'TokenExpiredError') {
@@ -76,8 +84,18 @@ const verifyToken = (token) => {
             return null;
         }
 
-        // 处理无效token
-        console.error(`无效Token: ${error.message} | Token: ${token.substring(0, 20)}...`);
+        console.error('验证错误详情:');
+        console.error('错误名称:', error.name);
+        console.error('错误消息:', error.message);
+
+        if (error.name === 'TokenExpiredError') {
+            console.error('过期时间:', error.expiredAt);
+        }
+
+        if (error.name === 'JsonWebTokenError') {
+            console.error('具体原因:', error.message);
+        }
+
         return null;
     }
 };
