@@ -1,6 +1,6 @@
 // server.js
 const WebSocket = require('ws');
-const { setupWSConnection } = require('y-websocket');
+const {setupWSConnection} = require('y-websocket');
 const jwt = require('jsonwebtoken');
 const url = require('url');
 const http = require('http');
@@ -68,10 +68,19 @@ wss.on('close', () => {
 // 增强的JWT验证函数
 const verifyToken = (token) => {
 
-
-
     try {
         console.log('原始Token:', token);
+        console.log('Token长度:', token.length);
+
+        const parsedUrl = url.parse(req.url, true);
+
+        // 清理 token（移除斜杠）
+        let token = parsedUrl.query.token;
+        if (typeof token === 'string') {
+            token.replace(/\//g, '');
+        }
+
+        console.log('清理后Token:', token);
         console.log('Token长度:', token.length);
 
         // 打印密钥前10个字符用于验证
@@ -104,7 +113,7 @@ const verifyToken = (token) => {
 };
 
 // 高级连接处理器
-const handleConnection = (ws, req,parsedUrl) => {
+const handleConnection = (ws, req, parsedUrl) => {
     const connectionId = `conn-${++connectionCount}`;
     ws.id = connectionId;
     ws.isAlive = true;
@@ -185,19 +194,7 @@ const handleConnection = (ws, req,parsedUrl) => {
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
     try {
-        const parsedUrl = url.parse(req.url, true);
-
-        // 清理 token（移除斜杠）
-        let token = parsedUrl.query.token;
-        if (typeof token === 'string') {
-             token.replace(/\//g, '');
-        }
-
-        console.log('清理后Token:', token);
-        console.log('Token长度:', token.length);
-
-
-        handleConnection(ws, req,parsedUrl);
+        handleConnection(ws, req, parsedUrl);
     } catch (error) {
         console.error(`未处理的连接错误: ${error.message}`);
         if (ws.readyState === WebSocket.OPEN) {
