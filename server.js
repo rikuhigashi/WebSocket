@@ -1,11 +1,17 @@
 // server.js
 const WebSocket = require('ws');
-const yWebsocket = require('y-websocket');
-const setupWSConnection = yWebsocket.setupWSConnection;
 const jwt = require('jsonwebtoken');
 const url = require('url');
 const http = require('http');
 require('dotenv').config();
+
+const setupWSConnection = require('y-websocket/bin/utils').setupWSConnection;
+
+console.log('setupWSConnection 类型:', typeof setupWSConnection);
+if (typeof setupWSConnection !== 'function') {
+    console.error('错误: setupWSConnection 不是一个函数');
+    process.exit(1);
+}
 
 // 从环境变量获取端口，默认为 1234
 const PORT = process.env.PORT || 1234;
