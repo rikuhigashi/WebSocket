@@ -11,6 +11,8 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "dotenv": "^16.5.0",
+    "jsonwebtoken": "^9.0.2",
     "ws": "^8.18.2",
     "y-websocket": "^3.0.0"
   },
@@ -21,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/rikuhigashi/WebSocket/issues"
   },
-  "homepage": "https://github.com/rikuhigashi/WebSocket#readme"
+  "homepage": "https://github.com/rikuhigashi/WebSocket#readme",
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
 }
