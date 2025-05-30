@@ -103,6 +103,9 @@ wss.on('connection', (ws, req) => {
         };
 
         console.log('使用的JWT_SECRET:', process.env.JWT_SECRET);
+        console.log('完整URL:', req.url);
+        console.log('解析后查询参数:', parsedUrl.query);
+        console.log('清理后Token:', cleanToken);
         // 验证 JWT
         const decoded = verifyToken(cleanToken);
         if (!decoded) {
