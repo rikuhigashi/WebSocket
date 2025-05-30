@@ -104,7 +104,7 @@ const verifyToken = (token) => {
 };
 
 // 高级连接处理器
-const handleConnection = (ws, req) => {
+const handleConnection = (ws, req,parsedUrl) => {
     const connectionId = `conn-${++connectionCount}`;
     ws.id = connectionId;
     ws.isAlive = true;
@@ -121,7 +121,6 @@ const handleConnection = (ws, req) => {
     };
 
     // 解析 URL 和查询参数
-    const parsedUrl = url.parse(req.url, true);
     const token = parsedUrl.query.token;
     const room = parsedUrl.query.room;
 
@@ -186,14 +185,19 @@ const handleConnection = (ws, req) => {
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
     try {
+        const parsedUrl = url.parse(req.url, true);
 
+        // 清理 token（移除斜杠）
         let token = parsedUrl.query.token;
         if (typeof token === 'string') {
              token.replace(/\//g, '');
         }
+
         console.log('清理后Token:', token);
         console.log('Token长度:', token.length);
-        handleConnection(ws, req);
+
+
+        handleConnection(ws, req,parsedUrl);
     } catch (error) {
         console.error(`未处理的连接错误: ${error.message}`);
         if (ws.readyState === WebSocket.OPEN) {
