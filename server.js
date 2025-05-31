@@ -4,7 +4,7 @@ const url = require('url');
 const http = require('http');
 require('dotenv').config();
 
-const { WebsocketProvider } = require('y-websocket');  // 从 y-websocket 导入 WebsocketProvider
+const {WebsocketProvider} = require('y-websocket');  // 从 y-websocket 导入 WebsocketProvider
 const Y = require('yjs');  // 导入 Yjs
 
 // 从环境变量获取端口，默认为 1234
@@ -209,15 +209,16 @@ const handleConnection = (ws, req, parsedUrl) => {
 
         console.log(`关闭原因: ${closeReasons[code] || '未知'}`);
     });
+
+    ws.on('message', (data) => {
+        console.log(`[${connectionId}] 收到消息: ${data.length} 字节`);
+        if (data.length < 100) {
+            console.log(`消息内容: ${data.toString()}`);
+        }
+    });
+
 };
 
-
-ws.on('message', (data) => {
-    console.log(`[${connectionId}] 收到消息: ${data.length} 字节`);
-    if (data.length < 100) {
-        console.log(`消息内容: ${data.toString()}`);
-    }
-});
 
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
