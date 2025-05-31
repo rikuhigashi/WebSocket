@@ -115,6 +115,8 @@ const handleConnection = (ws, req, parsedUrl) => {
     ws.isAlive = true;
 
     console.log(`[${new Date().toISOString()}] 收到新连接: ${connectionId}`);
+    console.log('原始请求URL:', req.url);
+    console.log('解析后的查询参数:', parsedUrl.query);
 
     // 连接元数据
     const metadata = {
@@ -126,8 +128,27 @@ const handleConnection = (ws, req, parsedUrl) => {
     };
 
     // 解析 URL 和查询参数
-    const token = parsedUrl.query.token;
+    let token = parsedUrl.query.token;
     const room = parsedUrl.query.room;
+
+    // 1. 修复 token 格式问题
+    if (token && token.length > 0) {
+        // 移除可能被错误添加的房间名
+        token = token.replace(room, '');
+
+        // 移除 token 末尾的非 JWT 字符
+        const jwtPattern = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+        if (!jwtPattern.test(token)) {
+            // 尝试提取有效的 JWT 部分
+            const match = token.match(/(^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/);
+            if (match && match[1]) {
+                token = match[1];
+            }
+        }
+    }
+
+    console.log('清理后Token:', token);
+    console.log('Token长度:', token?.length || 0);
 
     // 验证必需参数
     if (!token || !room) {
@@ -156,18 +177,11 @@ const handleConnection = (ws, req, parsedUrl) => {
 
     // 设置 Yjs WebSocket 连接
     try {
-        // 使用 WebsocketProvider 替代 setupWSConnection
-        const ydoc = new Y.Doc();
-        const websocketProvider = new WebsocketProvider(
-            'wss://websocket-5ngf.onrender.com/collaboration',  // WebSocket URL
-            room,  // 房间ID
-            ydoc,  // Yjs文档实例
-            {
-                connect: true,
-                disableBc: true,
-                maxBackoffTime: 10000,  // 最大重连间隔
-            }
-        );
+        setupWSConnection(ws, req, {
+            room: room,
+            gc: true
+        });
+
         console.log(`[${connectionId}] Yjs连接已建立`);
     } catch (error) {
         console.error(`[${connectionId}] Yjs设置失败: ${error.message}`);
@@ -190,33 +204,7 @@ const handleConnection = (ws, req, parsedUrl) => {
     ws.on('close', (code, reason) => {
         const duration = Math.round((new Date() - metadata.connectedAt) / 1000);
         console.log(`[${connectionId}] 连接关闭: ${code} - ${reason.toString()} | 持续时间: ${duration}秒`);
-
-
-        const closeReasons = {
-            1000: '正常关闭',
-            1001: '端点离开',
-            1002: '协议错误',
-            1003: '不支持的数据类型',
-            1005: '无状态码',
-            1006: '异常关闭',
-            1007: '无效数据',
-            1008: '策略违规',
-            1009: '消息过大',
-            1010: '需要扩展',
-            1011: '意外错误',
-            1015: 'TLS握手失败'
-        };
-
-        console.log(`关闭原因: ${closeReasons[code] || '未知'}`);
     });
-
-    ws.on('message', (data) => {
-        console.log(`[${connectionId}] 收到消息: ${data.length} 字节`);
-        if (data.length < 100) {
-            console.log(`消息内容: ${data.toString()}`);
-        }
-    });
-
 };
 
 
