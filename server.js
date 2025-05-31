@@ -4,7 +4,7 @@ const url = require('url');
 const http = require('http');
 require('dotenv').config();
 
-const {WebsocketProvider} = require('y-websocket');  // 从 y-websocket 导入 WebsocketProvider
+const { WebsocketProvider } = require('y-websocket');  // 从 y-websocket 导入 WebsocketProvider
 const Y = require('yjs');  // 导入 Yjs
 
 // 从环境变量获取端口，默认为 1234
@@ -177,11 +177,18 @@ const handleConnection = (ws, req, parsedUrl) => {
 
     // 设置 Yjs WebSocket 连接
     try {
-        setupWSConnection(ws, req, {
-            room: room,
-            gc: true
-        });
-
+        // 使用 WebsocketProvider 来代替 setupWSConnection
+        const ydoc = new Y.Doc();
+        const websocketProvider = new WebsocketProvider(
+            'wss://websocket-5ngf.onrender.com/collaboration',
+            room,  // 房间ID
+            ydoc,  // Yjs文档实例
+            {
+                connect: true,
+                disableBc: true,
+                maxBackoffTime: 10000,  // 最大重连间隔
+            }
+        );
         console.log(`[${connectionId}] Yjs连接已建立`);
     } catch (error) {
         console.error(`[${connectionId}] Yjs设置失败: ${error.message}`);
@@ -206,7 +213,6 @@ const handleConnection = (ws, req, parsedUrl) => {
         console.log(`[${connectionId}] 连接关闭: ${code} - ${reason.toString()} | 持续时间: ${duration}秒`);
     });
 };
-
 
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
