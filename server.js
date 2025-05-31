@@ -190,8 +190,34 @@ const handleConnection = (ws, req, parsedUrl) => {
     ws.on('close', (code, reason) => {
         const duration = Math.round((new Date() - metadata.connectedAt) / 1000);
         console.log(`[${connectionId}] 连接关闭: ${code} - ${reason.toString()} | 持续时间: ${duration}秒`);
+
+
+        const closeReasons = {
+            1000: '正常关闭',
+            1001: '端点离开',
+            1002: '协议错误',
+            1003: '不支持的数据类型',
+            1005: '无状态码',
+            1006: '异常关闭',
+            1007: '无效数据',
+            1008: '策略违规',
+            1009: '消息过大',
+            1010: '需要扩展',
+            1011: '意外错误',
+            1015: 'TLS握手失败'
+        };
+
+        console.log(`关闭原因: ${closeReasons[code] || '未知'}`);
     });
 };
+
+
+ws.on('message', (data) => {
+    console.log(`[${connectionId}] 收到消息: ${data.length} 字节`);
+    if (data.length < 100) {
+        console.log(`消息内容: ${data.toString()}`);
+    }
+});
 
 // 高级错误处理中间件
 wss.on('connection', (ws, req) => {
